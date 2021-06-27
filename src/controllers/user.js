@@ -62,7 +62,7 @@ const updateUser = (req, res) => {
   User.findByIdAndUpdate(owner, {
     name,
     about,
-  })
+  }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден.' });
@@ -73,6 +73,10 @@ const updateUser = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_BAD_REQUEST).send({ message: `Переданы некорректные данные при обновлении профиля: ${err}` });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(ERROR_BAD_REQUEST).send({ message: `Введен некорректный id пользователя: ${err}` });
         return;
       }
       res.status(ERROR_SERVER).send({ message: `Внутренняя ошибка сервера: ${err}` });
@@ -87,7 +91,7 @@ const updateUserAvatar = (req, res) => {
 
   User.findByIdAndUpdate(owner, {
     avatar,
-  })
+  }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден.' });
@@ -98,6 +102,10 @@ const updateUserAvatar = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_BAD_REQUEST).send({ message: `Переданы некорректные данные при обновлении аватара: ${err}` });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(ERROR_BAD_REQUEST).send({ message: `Введен некорректный id пользователя: ${err}` });
         return;
       }
       res.status(ERROR_SERVER).send({ message: `Внутренняя ошибка сервера: ${err}` });
