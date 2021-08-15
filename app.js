@@ -31,7 +31,7 @@ app.use('/users', userRoutes);
 app.use('/cards', cardRoutes);
 
 app.use('*', () => {
-  throw new NotFoundError('Запрашиваемый ресурс не найден');
+  throw new NotFoundError('Запрашиваемый адрес не найден.');
 });
 app.use(errors());
 
@@ -39,11 +39,11 @@ app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   if (err.kind === 'ObjectId') {
     res.status(400).send({
-      message: 'Неверно переданы данные',
+      message: 'Переданы некорректные данные.',
     });
   } else {
     res.status(statusCode).send({
-      message: statusCode === 500 ? 'На сервере произошла ошибка'
+      message: statusCode === 500 ? 'На сервере произошла ошибка.'
       : message,
     });
   }

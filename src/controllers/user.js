@@ -1,10 +1,10 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const BadRequestError = require('../errors/bad-request-error'); //400
-const NotFoundError = require('../errors/not-found-error'); //404
-const ConflictError = require('../errors/conflict-error'); //409
-const UnauthorizedError = require('../errors/unauthorized-error') // 401
+const BadRequestError = require('../errors/bad-request-error');
+const NotFoundError = require('../errors/not-found-error');
+const ConflictError = require('../errors/conflict-error');
+const UnauthorizedError = require('../errors/unauthorized-error');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -12,47 +12,24 @@ const OK = 200;
 
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((user) => res.status(OK).send({ user }))
-    .catch(next)
+    .then((user) => res.status(OK).send(user))
+    .catch(next);
 };
 
 const getOwner = (req, res, next) => {
   const owner = req.user._id;
   User.findById(owner)
-    .then((user) => {
-      if (!user) {
-        // res.status(404).send({ message: 'Пользователь по указанному id не найден.' });
-        // return;
-        throw new NotFoundError(`Пользователь по указанному id не найден (${err})`)
-      }
-      res.status(OK).send({ user });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        throw new BadRequestError(`Введен некорректный id пользователя (${err})`);
-      }
-    })
-    .catch(err => next(err))
+    .orFail(new NotFoundError('Пользователь по указанному id не найден.'))
+    .then((user) => res.status(OK).res.send(user))
+    .catch(next);
 };
 
 const getUserById = (req, res, next) => {
   const { userId } = req.params;
   User.findById(userId)
-    .then((user) => {
-      if (!user) {
-        // res.status(404).send({ message: 'Пользователь по указанному id не найден.' });
-        // return;
-        throw new NotFoundError(`Пользователь по указанному id не найден (${err})`)
-      }
-      res.status(OK).send(user);
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        throw new BadRequestError(`Введен некорректный id пользователя (${err})`);
-
-      }
-    })
-    .catch(err => next(err))
+    .orFail(new NotFoundError('Пользователь по указанному id не найден.'))
+    .then((user) => res.status(OK).res.send(user))
+    .catch(next);
 };
 
 const createUser = (req, res, next) => {
@@ -67,13 +44,13 @@ const createUser = (req, res, next) => {
       .then((user) => res.status(OK).send(user))
       .catch((err) => {
         if (err.name === 'ValidationError') {
-          throw new BadRequestError(`Переданы некорректные данные при создании пользователя (${err})`)
+          throw new BadRequestError('Переданы некорректные данные при создании пользователя.')
         }
         if (err.name === "MongoError" && err.code === 11000) {
-          throw new ConflictError(`Пользователь с таким email уже существует (${err})`)
+          throw new ConflictError('Пользователь с таким email уже существует.')
         }
       })
-      .catch(next)
+      .catch(next);
 };
 
 const updateUser = (req, res, next) => {
@@ -87,15 +64,14 @@ const updateUser = (req, res, next) => {
     name,
     about,
   }, { new: true, runValidators: true })
-    .then((user) => {
-      res.status(OK).send({ user });
-    })
+    .orFail(new NotFoundError('Пользователь по указанному id не найден.'))
+    .then((user) => res.status(OK).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError(`Переданы некорректные данные при обновлении профиля (${err})`);
+        throw new BadRequestError('Переданы некорректные данные при обновлении профиля.');
       }
     })
-    .catch(next)
+    .catch(next);
 };
 
 const updateUserAvatar = (req, res, next) => {
@@ -107,15 +83,16 @@ const updateUserAvatar = (req, res, next) => {
   User.findByIdAndUpdate(owner, {
     avatar,
   }, { new: true, runValidators: true })
+    .orFail(new NotFoundError('Пользователь по указанному id не найден.'))
     .then((user) => {
-      res.status(OK).send({ user });
+      res.status(OK).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError(`Переданы некорректные данные при обновлении аватара (${err})`);
+        throw new BadRequestError('Переданы некорректные данные при обновлении аватара.');
       }
     })
-    .catch(next)
+    .catch(next);
 };
 
 const login = (req, res, next) => {
