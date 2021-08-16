@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const { errors, celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -9,8 +9,9 @@ const app = express();
 const userRoutes = require('./src/routes/user');
 const cardRoutes = require('./src/routes/card');
 const {
-  createUser, login
+  createUser, login,
 } = require('./src/controllers/user');
+const { validateUser, validateLogin } = require('./src/middlewares/validation');
 const auth = require('./src/middlewares/auth');
 const NotFoundError = require('./src/errors/not-found-error');
 
@@ -24,8 +25,8 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', validateLogin, login);
+app.post('/signup', validateUser, createUser);
 app.use(auth);
 app.use('/users', userRoutes);
 app.use('/cards', cardRoutes);
@@ -35,7 +36,7 @@ app.use('*', () => {
 });
 app.use(errors());
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const { statusCode = 500, message } = err;
   if (err.kind === 'ObjectId') {
     res.status(400).send({
@@ -44,10 +45,10 @@ app.use((err, req, res, next) => {
   } else {
     res.status(statusCode).send({
       message: statusCode === 500 ? 'На сервере произошла ошибка.'
-      : message,
+        : message,
     });
   }
-})
+});
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

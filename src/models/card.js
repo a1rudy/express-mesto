@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -13,10 +13,10 @@ const cardSchema = new mongoose.Schema({
     validate: {
       validator(url) {
         return /^((http|https):\/\/)(www\.)?([\w\W\d]{1,})(\.)([A-Za-z]{1,10})([\w\W\d]{1,})?$/.test(
-          url
+          url,
         );
       },
-      message: "Не верный формат ссылки",
+      message: 'Не верный формат ссылки',
     },
   },
   owner: {
@@ -36,4 +36,4 @@ const cardSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("card", cardSchema);
+module.exports = mongoose.model('card', cardSchema);
