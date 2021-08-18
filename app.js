@@ -36,7 +36,7 @@ app.use('*', () => {
 });
 app.use(errors());
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   if (err.kind === 'ObjectId') {
     res.status(400).send({
@@ -48,6 +48,8 @@ app.use((err, req, res) => {
         : message,
     });
   }
+
+  next();
 });
 
 app.listen(PORT, () => {
