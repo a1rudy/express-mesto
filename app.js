@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -8,11 +9,11 @@ const app = express();
 
 const userRoutes = require('./src/routes/user');
 const cardRoutes = require('./src/routes/card');
-const {
-  createUser, login,
-} = require('./src/controllers/user');
+const { createUser, login } = require('./src/controllers/user');
 const { validateUser, validateLogin } = require('./src/middlewares/validation');
+const { requestLogger, errorLogger } = require('./src/middlewares/logger');
 const auth = require('./src/middlewares/auth');
+const cors = require('./src/middlewares/cors');
 const NotFoundError = require('./src/errors/not-found-error');
 
 app.use(bodyParser.json());
@@ -25,6 +26,9 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
+app.use(cors);
+app.use(requestLogger);
+
 app.post('/signin', validateLogin, login);
 app.post('/signup', validateUser, createUser);
 app.use(auth);
@@ -34,6 +38,9 @@ app.use('/cards', cardRoutes);
 app.use('*', () => {
   throw new NotFoundError('Запрашиваемый адрес не найден.');
 });
+
+app.use(errorLogger);
+
 app.use(errors());
 
 app.use((err, req, res, next) => {
